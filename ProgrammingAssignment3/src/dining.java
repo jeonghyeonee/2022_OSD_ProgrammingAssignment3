@@ -10,16 +10,17 @@ class dining {
 
         Philosopher[] philosophers = new Philosopher[miscsubs.NUMBER_PHILOSOPHERS];
 
-        PhilosopherMonitor monitor = new PhilosopherMonitor(miscsubs.NUMBER_PHILOSOPHERS);
-
+        PhilosopherMonitor monitor = new PhilosopherMonitor(miscsubs.NUMBER_CHOPSTICKS);
 
         for (int i = 0; i < miscsubs.NUMBER_PHILOSOPHERS; i++) {
             philosophers[i] = new Philosopher(i, monitor);
             new Thread(philosophers[i]).start();
         }
 
+
         while(miscsubs.TotalEats < miscsubs.MAX_EATS){
         }
+
 
         System.out.println();
 
@@ -42,30 +43,26 @@ class Philosopher implements Runnable{
 
 
     public void run(){
-        try{
-            while(miscsubs.TotalEats < miscsubs.MAX_EATS){
-                think(); // thinking
+        while(miscsubs.TotalEats < miscsubs.MAX_EATS){
+            miscsubs.RandomDelay(); // thinking
+
+            try {
+
                 monitor.pickUp(id);     // eating start
-                eat(id);
                 monitor.putDown(id);    // eating finish
+
+                if(miscsubs.TotalEats == miscsubs.MAX_EATS){
+                    break;
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch(InterruptedException e){
-            System.out.println("Philosopher " + id + " was interrupted.\n");
+
         }
 
     }
 
-    
-    private void think(){
-        miscsubs.RandomDelay();
-    }
-
-
-    public void eat(int id){
-        miscsubs.StartEating(id);
-        miscsubs.RandomDelay();
-        miscsubs.DoneEating(id);
-    }
 
 }
 
@@ -78,6 +75,7 @@ class PhilosopherMonitor{
         philosopherState = new State[num];
         for (int i = 0; i < num; i++){
             philosopherState[i] = State.THINKING;
+
         }
     }
 
@@ -88,8 +86,12 @@ class PhilosopherMonitor{
             wait();
         }
         philosopherState[id] = State.EATING;
-    }
 
+        miscsubs.StartEating(id);
+        miscsubs.RandomDelay();
+
+
+    }
 
     private boolean neighborEating(int id){
         int num = philosopherState.length;
@@ -105,7 +107,9 @@ class PhilosopherMonitor{
     }
 
     public synchronized void putDown(int id) throws InterruptedException{
+        miscsubs.DoneEating(id);
         philosopherState[id] = State.THINKING;
         notifyAll();
     }
+
 }
